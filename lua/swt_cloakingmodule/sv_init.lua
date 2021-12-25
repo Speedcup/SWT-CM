@@ -53,10 +53,11 @@ function SWT_CM:Cloak( ply, force )
 	end
 
 	if not isCloaked then
-		if not SWT_CM:CanCloak(ply) then
+		-- Skip cancloak when its forced.
+		if not (SWT_CM:CanCloak(ply) and force) then
 			return
 		end
-		
+
 		ply.OldDraw = ply.Draw
 
 		ply:RemoveAllDecals()
