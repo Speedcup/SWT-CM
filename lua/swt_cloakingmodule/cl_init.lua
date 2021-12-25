@@ -149,7 +149,7 @@ hook.Add("HUDPaint","DrawSWTVisorEffect",function()
 		surface.SetFont("SWT-HUD-02")
 		local x,y = surface.GetTextSize("Cloaked!")
 
-		draw.SimpleTextOutlined("Cloaked!", "SWT-HUD-02", w * 0.98 - x, h / 2 - y / 2, Color(255,40,40,230), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 255))
+		draw.SimpleTextOutlined("Cloaked!", "SWT-HUD-02", w * 0.98 - x, h / 3 - y / 2, Color(255,40,40,230), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 255))
 	end
 	
 	--ESP + NPC/Player-Marker + DontDrawCloakedPeople

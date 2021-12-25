@@ -20,10 +20,30 @@
 --]]-------------------------------------------------------------------
 
 local Player = FindMetaTable("Player")
-function SWT_CM:Cloak( ply, force )
-	if not ply:IsValid() then
-		return
+--[[
+	Function: SWT_CM:CanCloak( ply: user )
+
+	Checks if a player can cloak.
+
+	Returns:
+		bool - canCloak
+]]
+function SWT_CM:CanCloak( ply )
+	if not IsValid(ply) then
+		return false
 	end
+
+	-- Players should not be able to cloak themselves, when its disabled in water.
+	if SWT_CM.Config.DisableCloakInWater then
+		if ply:WaterLevel() >= 1 then
+			return false
+		end
+	end
+
+	return true
+end
+
+function SWT_CM:Cloak( ply, force )
 
 	local isCloaked = ply:GetNWBool("SWT_CM.IsCloaked", false)
 
@@ -33,6 +53,10 @@ function SWT_CM:Cloak( ply, force )
 	end
 
 	if not isCloaked then
+		if not SWT_CM:CanCloak(ply) then
+			return
+		end
+		
 		ply.OldDraw = ply.Draw
 
 		ply:RemoveAllDecals()
@@ -113,6 +137,17 @@ hook.Add("PlayerCanHearPlayersVoice", "SWT_CM.OnlyCloakedCanHearCloaked", functi
 			return true, true
 		elseif send:IsCloaked() and not rec:IsCloaked() then
 			return false
+		end
+	end
+end)
+
+-- InWater Check
+hook.Add("Think", "SWT_CM.DisableWhileInWater", function()
+	if SWT_CM.Config.DisableCloakInWater then
+		for k, ply in pairs(player.GetAll()) do
+			if ply:IsCloaked() and ply:WaterLevel() == 1 then -- WaterLevel => https://wiki.facepunch.com/gmod/Entity:WaterLevel => 1 = Slightly submerged (at least to the feet) // should be enough? If too less, change it the way you want.
+				SWT_CM:Cloak(ply, false)
+			end
 		end
 	end
 end)

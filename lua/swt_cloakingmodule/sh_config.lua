@@ -27,6 +27,9 @@ SWT_CM.Config.DisableFootstepsWhileCloaked = true
 -- Whether cloaked people can only hear other cloaked people.
 SWT_CM.Config.OnlyCloakedCanHearCloaked = true
 
+-- Whether the cloak should be deactivated in water. (Could cause performance issues, because we have to check the status of a player every second.)
+SWT_CM.Config.DisableCloakInWater = true
+
 -- Default cooldown between client swep interactions. (Leftclick, Rightclick, Reload) - Just should prevent spamming.
 SWT_CM.Config.DefaultSWEPCooldown = 1
 
