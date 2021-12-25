@@ -63,6 +63,20 @@ function Player_Meta:GetRelationType(ent)
 	return "Unkown", "Unkown", {r = 255, g = 255, b = 255}
 end
 
+function SWT_CM:ToggleHUD()
+	if SWT_CM.ESP ~= true then
+		surface.PlaySound("swt_cm/esp_activation.mp3")
+	else
+		surface.PlaySound("swt_cm/esp_deactivation.mp3")
+	end
+
+	SWT_CM.ESP = not SWT_CM.ESP
+end
+
+--[[-------------------------------------------------------------------
+	Font Creation
+	Create every font we need.
+--]]-------------------------------------------------------------------
 surface.CreateFont( "SWT-HUD-01", {
 	font = "Roboto",
 	extended = true,
@@ -117,20 +131,12 @@ surface.CreateFont( "SWT-HUD-03", {
 	outline = false,
 })
 
+--[[-------------------------------------------------------------------
+	UI-Creation
+	Here we gonna create the entire UserInterface for the SWT_CM.
+--]]-------------------------------------------------------------------
 local ply = nil
 local plys = {}
---SWT.ESP = false
-
-
-function SWT_CM:ToggleHUD()
-	if SWT_CM.ESP ~= true then
-		surface.PlaySound("swt_cm/esp_activation.mp3")
-	else
-		surface.PlaySound("swt_cm/esp_deactivation.mp3")
-	end
-
-	SWT_CM.ESP = not SWT_CM.ESP
-end
 
 local function coordinates( ent )
 	local min, max = ent:OBBMins(), ent:OBBMaxs()
