@@ -41,3 +41,18 @@ SWT_CM.Config.ESPInformations = {
     ["health"] = true,
     ["armor"] = true,
 }
+
+-- A system that prevents player from using infinite cloak.
+SWT_CM.Config.EnableBatterySystem = true
+
+-- The Max Battery, here you could set a different value for each player. (For example Donator = 200?, normal players = 100, thats why i used a function.)
+SWT_CM.Config.MaxBattery = 100
+
+-- Battery Loose in seconds
+SWT_CM.Config.BatteryLoose = 2
+
+-- Battery Regeneration in seconds
+SWT_CM.Config.BatteryRegeneration = 2
+
+-- Minimum Battery to cloke / use holo
+SWT_CM.Config.MinimumBattery = (SWT_CM.Config.MaxBattery / 10)

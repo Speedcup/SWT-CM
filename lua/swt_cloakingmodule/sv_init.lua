@@ -40,11 +40,17 @@ function SWT_CM:CanCloak( ply )
 		end
 	end
 
+	if SWT_CM.Config.EnableBatterySystem then
+		local battery = ply.CloakBattery or SWT_CM.Config.MaxBattery
+		if battery < SWT_CM.Config.MinimumBattery then
+			return false
+		end
+	end
+	
 	return true
 end
 
 function SWT_CM:Cloak( ply, force )
-
 	local isCloaked = ply:GetNWBool("SWT_CM.IsCloaked", false)
 
 	-- If force is available and not nil, overwrite isCloaked with the force value.
@@ -54,8 +60,10 @@ function SWT_CM:Cloak( ply, force )
 
 	if not isCloaked then
 		-- Skip cancloak when its forced.
-		if not (SWT_CM:CanCloak(ply) and force) then
-			return
+		if force == nil then
+			if not SWT_CM:CanCloak(ply) then
+				return
+			end
 		end
 
 		ply.OldDraw = ply.Draw
@@ -74,6 +82,14 @@ function SWT_CM:Cloak( ply, force )
 		ply:SendLua([[surface.PlaySound("swt_cm/cloak_deactivation.mp3")]])
 	end
 end
+
+hook.Add("Think", "SWT_CM.BatterySystem", function()
+	if SWT_CM.Config.EnableBatterySystem then
+		for _, ply in pairs(player.GetHumans()) do
+			SWT_CM:CloakThink(ply)
+		end
+	end
+end)
 
 -- Just an alias for SWT_CM:Cloak(ply)
 --function Player:DoSWTCloak()

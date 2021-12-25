@@ -55,6 +55,24 @@ surface.CreateFont( "SWT-HUD-02", {
 	outline = false,
 })
 
+surface.CreateFont( "SWT-HUD-03", {
+	font = "Roboto",
+	extended = true,
+	size = ScreenScale(15),
+	weight = 500,
+	blursize = 0,
+	scanlines = 2,
+	antialias = true,
+	underline = false,
+	italic = false,
+	strikeout = false,
+	symbol = false,
+	rotary = false,
+	shadow = true,
+	additive = false,
+	outline = false,
+})
+
 local ply = nil
 local plys = {}
 --SWT.ESP = false
@@ -143,15 +161,15 @@ end)
 hook.Add("HUDPaint","DrawSWTVisorEffect",function() 
 	local w, h = ScrW(),ScrH()
 	ply = LocalPlayer()
-
-	--Marking on the side of the screen when cloaked
-	if LocalPlayer():IsCloaked() then
-		surface.SetFont("SWT-HUD-02")
-		local x,y = surface.GetTextSize("Cloaked!")
-
-		draw.SimpleTextOutlined("Cloaked!", "SWT-HUD-02", w * 0.98 - x, h / 3 - y / 2, Color(255,40,40,230), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 255))
-	end
 	
+	surface.SetFont("SWT-HUD-02")
+	local x, y = surface.GetTextSize(LocalPlayer():IsCloaked() and "Cloaked!" or "Visible")
+	draw.SimpleTextOutlined(LocalPlayer():IsCloaked() and "Cloaked!" or "Visible", "SWT-HUD-02", w * 0.98 - x, h / 3 - y / 2, (LocalPlayer():IsCloaked() and Color(255,40,40,230)) or Color(0, 220, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 255))
+
+	if SWT_CM.Config.EnableBatterySystem then
+		draw.SimpleTextOutlined(math.Round(LocalPlayer().CloakBattery or SWT_CM.Config.MaxBattery, 2), "SWT-HUD-03", w * 0.98 - x, h / 2.5 - y / 2, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 255))
+	end
+
 	--ESP + NPC/Player-Marker + DontDrawCloakedPeople
 	for k,v in pairs( player.GetAll() ) do
        	--if v:GetNWBool("SWT.cloaked",false)==true and IsValid(v:GetActiveWeapon()) then v:GetActiveWeapon():SetNoDraw(true) end
@@ -255,3 +273,9 @@ function draw.DrawColoredBlurRect(xpos, ypos, width, height, color, layers, dens
     surface.SetDrawColor(color)
     surface.DrawRect(xpos, ypos, width, height)
 end
+
+hook.Add("Think", "SWT_CM.BatterySystem", function()
+	if SWT_CM.Config.EnableBatterySystem then
+    	SWT_CM:CloakThink(LocalPlayer())
+	end
+end)

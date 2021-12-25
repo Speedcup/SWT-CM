@@ -21,6 +21,25 @@
 
 local Player = FindMetaTable("Player")
 
+function SWT_CM:CloakThink(ply)
+	if not (IsValid(ply) or ply:Alive() or SWT_CM.Config.EnableBatterySystem) then
+		return false
+	end
+
+	local maxBattery = SWT_CM.Config.MaxBattery
+	local battery = ply.CloakBattery or maxBattery
+
+	if ply:IsCloaked() and battery > 0 then
+		ply.CloakBattery = math.max(0, battery - SWT_CM.Config.BatteryLoose * FrameTime())
+	elseif ply:IsCloaked() and battery < 1 then
+		if SERVER then
+			SWT_CM:Cloak( ply, false )
+		end
+	elseif not ply:IsCloaked() then
+		ply.CloakBattery = math.min(maxBattery, battery + SWT_CM.Config.BatteryRegeneration * FrameTime())
+	end
+end
+
 --[[
 	Function: Player:IsCloaked() -> bool
 	Meta: Player
