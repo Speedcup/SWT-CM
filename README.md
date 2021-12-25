@@ -1,2 +1,2 @@
 # SWT-CM
-A SWT-Cloaking Module, where you can easily cloak and uncloak yourself.
+A SWT-Cloaking Module. More information work in progress. :)
