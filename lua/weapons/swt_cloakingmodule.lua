@@ -81,7 +81,9 @@ end
 SWEP.ReloadCooldown = 0
 function SWEP:Reload()
 	if self.ReloadCooldown < CurTime() then
-		SWT_CM:ToggleHUD()
+		if CLIENT then
+			SWT_CM:ToggleHUD()
+		end
 
 		self.ReloadCooldown = CurTime() + SWT_CM.Config.DefaultSWEPCooldown
 	end
