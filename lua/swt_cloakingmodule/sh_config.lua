@@ -49,7 +49,7 @@ SWT_CM.Config.EnableBatterySystem = true
 SWT_CM.Config.MaxBattery = 100
 
 -- Battery Loose in seconds
-SWT_CM.Config.BatteryLoose = 2
+SWT_CM.Config.BatteryLoose = 20
 
 -- Battery Regeneration in seconds
 SWT_CM.Config.BatteryRegeneration = 2

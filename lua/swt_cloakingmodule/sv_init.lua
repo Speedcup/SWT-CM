@@ -29,7 +29,7 @@ local Player = FindMetaTable("Player")
 		bool - canCloak
 ]]
 function SWT_CM:CanCloak( ply )
-	if not IsValid(ply) then
+	if not IsValid(ply) or ply:IsBot() then
 		return false
 	end
 
@@ -51,6 +51,10 @@ function SWT_CM:CanCloak( ply )
 end
 
 function SWT_CM:Cloak( ply, force )
+	if not IsValid(ply) or ply:IsBot() then
+		return false
+	end
+	
 	local isCloaked = ply:GetNWBool("SWT_CM.IsCloaked", false)
 
 	-- If force is available and not nil, overwrite isCloaked with the force value.
@@ -97,6 +101,8 @@ end)
 --end
 
 hook.Add("PlayerSpawn", "SWT_CM.ResetCloakOnRespawn", function(ply)
+	if ply:IsBot() then return end
+
 	SWT_CM:Cloak(ply, false)
 	ply.OldDraw = ply.Draw
 
@@ -161,7 +167,7 @@ end)
 -- InWater Check
 hook.Add("Think", "SWT_CM.DisableWhileInWater", function()
 	if SWT_CM.Config.DisableCloakInWater then
-		for k, ply in pairs(player.GetAll()) do
+		for k, ply in pairs(player.GetHumans()) do
 			if ply:IsCloaked() and ply:WaterLevel() == 1 then -- WaterLevel => https://wiki.facepunch.com/gmod/Entity:WaterLevel => 1 = Slightly submerged (at least to the feet) // should be enough? If too less, change it the way you want.
 				SWT_CM:Cloak(ply, false)
 			end

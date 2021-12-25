@@ -19,6 +19,50 @@
     SWT-CM - Client
 --]]-------------------------------------------------------------------
 
+--[[-------------------------------------------------------------------
+	Meta Functions
+	Used literally for everything thats called clientside.
+--]]-------------------------------------------------------------------
+local Player_Meta = FindMetaTable("Player")
+
+--[[
+	Function: Player:AddToRelations(ply)
+	Meta: Player (the current cloaked swt, localplayer)
+
+	Params:
+		ply - ply to add to players relations.
+]]
+function Player_Meta:AddToRelations(ply)
+	local oldRelations = table.Copy(self:GetRelations())
+
+	if table.HasValue(oldRelations, ply) then
+		return
+	end
+
+	table.insert(oldRelations, ply)
+	cookie.Set("SWT_CM.Relations", util.TableToJSON(oldRelations))
+end
+
+function Player_Meta:GetRelations()
+	return util.JSONToTable(cookie.GetString("SWT_CM.Relations", "[]"))
+end
+
+function Player_Meta:GetRelationType(ent)
+	if not IsValid(ent) then
+		return "Unknown", "Unknown", {r = 255, g = 255, b = 255}
+	end
+
+	if ent:IsPlayer() and table.HasValue(self:GetRelations(), ent:SteamID64()) then
+		return "Known", "Scanned Player", {r = 0, g = 255, b = 0}
+	elseif ent:IsPlayer() and not table.HasValue(self:GetRelations(), ent:SteamID64()) then
+		return "Unknown", "Player", {r = 255, g = 255, b = 255}
+	elseif ent:IsNPC() and ent:GetClass() == "npc_combine_s" then
+		return ent:GetName(), "Enemy", {r = 255, g = 0, b = 0}
+	end
+
+	return "Unkown", "Unkown", {r = 255, g = 255, b = 255}
+end
+
 surface.CreateFont( "SWT-HUD-01", {
 	font = "Roboto",
 	extended = true,
@@ -76,21 +120,6 @@ surface.CreateFont( "SWT-HUD-03", {
 local ply = nil
 local plys = {}
 --SWT.ESP = false
-
-local classTable = {
-	["player"] = {
-		name = "Spieler",
-		relation = "Unknown"
-	},
-	["npc_combine_s"] = {
-		name = "Unknown",
-		relation = "Enemy"
-	},
-	["npc_citizen"] = {
-		name = "Unknown",
-		relation = "Ally"
-	},
-}
 
 
 function SWT_CM:ToggleHUD()
@@ -158,89 +187,96 @@ hook.Add("PreDrawHalos", "DrawYourselfWhileCloaked",function()
 	end
 end)
 
-hook.Add("HUDPaint","DrawSWTVisorEffect",function() 
-	local w, h = ScrW(),ScrH()
-	ply = LocalPlayer()
-	
-	surface.SetFont("SWT-HUD-02")
-	local x, y = surface.GetTextSize(LocalPlayer():IsCloaked() and "Cloaked!" or "Visible")
-	draw.SimpleTextOutlined(LocalPlayer():IsCloaked() and "Cloaked!" or "Visible", "SWT-HUD-02", w * 0.98 - x, h / 3 - y / 2, (LocalPlayer():IsCloaked() and Color(255,40,40,230)) or Color(0, 220, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 255))
+hook.Add("HUDPaint","DrawSWTVisorEffect", function()
+	if LocalPlayer():HasWeapon("swt_cloakingmodule") then
+		local w, h = ScrW(),ScrH()
+		ply = LocalPlayer()
+		
+		surface.SetFont("SWT-HUD-02")
+		local x, y = surface.GetTextSize(LocalPlayer():IsCloaked() and "Cloaked!" or "Visible")
+		draw.SimpleTextOutlined(LocalPlayer():IsCloaked() and "Cloaked!" or "Visible", "SWT-HUD-02", w * 0.98 - x, h / 3 - y / 2, (LocalPlayer():IsCloaked() and Color(255,40,40,230)) or Color(0, 220, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 255))
 
-	if SWT_CM.Config.EnableBatterySystem then
-		draw.SimpleTextOutlined(math.Round(LocalPlayer().CloakBattery or SWT_CM.Config.MaxBattery, 2), "SWT-HUD-03", w * 0.98 - x, h / 2.5 - y / 2, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 255))
-	end
+		if SWT_CM.Config.EnableBatterySystem then
+			draw.SimpleTextOutlined(math.Round(LocalPlayer().CloakBattery or SWT_CM.Config.MaxBattery, 2), "SWT-HUD-03", w * 0.98 - x, h / 2.5 - y / 2, Color(255, 255, 255, 255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, Color(0, 0, 0, 255))
+		end
 
-	--ESP + NPC/Player-Marker + DontDrawCloakedPeople
-	for k,v in pairs( player.GetAll() ) do
-       	--if v:GetNWBool("SWT.cloaked",false)==true and IsValid(v:GetActiveWeapon()) then v:GetActiveWeapon():SetNoDraw(true) end
-       	if v ~= LocalPlayer() and SWT_CM.ESP and ply ~= nil then
-    		local pos = v:GetPos()
-    		local dist = ply:GetPos():Distance( pos )
-    		local crosshair = ply:GetEyeTrace().HitPos:ToScreen()
+		--ESP + NPC/Player-Marker + DontDrawCloakedPeople
+		for k,v in pairs( player.GetAll() ) do
+			--if v:GetNWBool("SWT.cloaked",false)==true and IsValid(v:GetActiveWeapon()) then v:GetActiveWeapon():SetNoDraw(true) end
+			if v ~= LocalPlayer() and SWT_CM.ESP and ply ~= nil then
+				local pos = v:GetPos()
+				local dist = ply:GetPos():Distance( pos )
+				local crosshair = ply:GetEyeTrace().HitPos:ToScreen()
 
-	       	if dist < SWT_CM.Config.ESPDistance and dist > 35 and (crosshair.x - 30 < v:GetPos():ToScreen().x and crosshair.x + 30 > v:GetPos():ToScreen().x) then    		
-	        	if v:IsPlayer() or v:IsNPC() then
-    				local x1, y1, x2, y2 = coordinates(v)
-    				if classTable[v:GetClass()].relation == "Enemy" then
-					    surface.SetDrawColor(255,0,0)
-					elseif classTable[v:GetClass()].relation == "Ally" then
-						surface.SetDrawColor(0,255,0)
-					elseif v:IsPlayer() and v:IsCloaked() then
-						surface.SetDrawColor(50,50,230)
-					else
-						surface.SetDrawColor(170,170,170)
-					end
+				if dist < SWT_CM.Config.ESPDistance and dist > 35 and (crosshair.x - 30 < v:GetPos():ToScreen().x and crosshair.x + 30 > v:GetPos():ToScreen().x) then    		
+					if v:IsPlayer() or v:IsNPC() then
+						local x1, y1, x2, y2 = coordinates(v)
 
-					if (0 < x2 and x1 < ScrW()) and (0 < y2 and y1 < ScrH()) then 
-				    	surface.DrawLine( x1, y1, x2, y1 )
-				    	surface.DrawLine( x1, y1, x1, y2 )
-				    	surface.DrawLine( x2, y2, x1, y2 )
-				    	surface.DrawLine( x2, y2, x2, y1 )
+						local relation_name, relation_type, relation_color = LocalPlayer():GetRelationType(v)
+						surface.SetDrawColor(relation_color.r, relation_color.g, relation_color.b)
 
-				    	origx1,origx2,origy1,origy2 = x1,x2,y1,y2
+						if (0 < x2 and x1 < ScrW()) and (0 < y2 and y1 < ScrH()) then 
+							surface.DrawLine( x1, y1, x2, y1 )
+							surface.DrawLine( x1, y1, x1, y2 )
+							surface.DrawLine( x2, y2, x1, y2 )
+							surface.DrawLine( x2, y2, x2, y1 )
 
-						draw.SimpleTextOutlined("Type: "..classTable[v:GetClass()].name,"SWT-HUD-01",x2+4,y1,Color(250,250,250),TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP,1,Color(0,0,0,255)) y1=y1+14
-	    	   			draw.SimpleTextOutlined("Relation: "..classTable[v:GetClass()].relation,"SWT-HUD-01",x2+4,y1,Color(250,250,250),TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP,1,Color(0,0,0,255)) y1=y1+14
-				    	if v:Health() > 0 then
-	    	   				if v:GetActiveWeapon() ~= NULL then draw.SimpleTextOutlined("Weapon: "..v:GetActiveWeapon():GetPrintName(),"SWT-HUD-01",x2+4,y1,Color(250,250,250),TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP,1,Color(0,0,0,255)) y1=y1+14 end
-				    		y1 = origy1
-							draw.SimpleTextOutlined("Status: Alive", "SWT-HUD-01",x1-4,y1,Color(250,250,250),TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(0,0,0,255))
-							y1 = y1 + 14
+							origx1, origx2, origy1, origy2 = x1, x2, y1, y2
 
-							if SWT_CM.Config.ESPInformations["health"] then
-	        					draw.SimpleTextOutlined("HP: "..v:Health(),"SWT-HUD-01",x1-4,y1,Color(250,250,250),TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(0,0,0,255))
-								y1 = y1 + 14
-							end
+							draw.SimpleTextOutlined("Type: " .. relation_type, "SWT-HUD-01",x2 + 4,y1,Color(250,250,250),TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP,1,Color(0,0,0,255)) y1=y1+14
+							draw.SimpleTextOutlined("Relation: " .. relation_name, "SWT-HUD-01",x2 + 4,y1,Color(250,250,250),TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP,1,Color(0,0,0,255)) y1=y1+14
 							
-							if SWT_CM.Config.ESPInformations["armor"] then
-								if v:IsPlayer() then
-									draw.SimpleTextOutlined("AP: " .. v:Armor(), "SWT-HUD-01", x1 - 4, y1, Color(250,250,250), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 1, Color(0,0,0,255))
-								end
-							end
-    					else
-    						draw.SimpleTextOutlined("Status: Dead","SWT-HUD-01", x1-4, origy1, Color(250,250,250), TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(255,0,0,255)) y1=y1+14
-    					end
-    				end
-    			end
-    		elseif dist < 2652 and dist > 35 then
-    			if v:IsNPC() or v:Alive() then
-    				local bone = v:LookupBone("ValveBiped.Bip01_Head1")
-    				if (v:IsPlayer() or v:IsNPC()) and isnumber(bone)==true then pos = v:GetBonePosition(bone) end
-    				local screenPos = pos:ToScreen()
+							if v:Health() > 0 then
+								if v:GetActiveWeapon() ~= NULL then draw.SimpleTextOutlined("Weapon: "..v:GetActiveWeapon():GetPrintName(),"SWT-HUD-01",x2+4,y1,Color(250,250,250),TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP,1,Color(0,0,0,255)) y1=y1+14 end
+								y1 = origy1
 
-    				if not v:IsCloaked() then
-    					draw.RoundedBox(10,screenPos.x-5,screenPos.y-5,10,10,Color(255,40,40))
-    					draw.SimpleTextOutlined("Unknown","SWT-HUD-01",screenPos.x+7,screenPos.y,Color(250,250,250),TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER,1,Color(255,0,0,255))
-    					draw.SimpleTextOutlined(math.Round(dist/52.521,0).." m","SWT-HUD-01",screenPos.x+7,screenPos.y+13,Color(250,250,250),TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER,1,Color(255,0,0,255))
-    				else
-						draw.RoundedBox(10,screenPos.x-5,screenPos.y-5,10,10,Color(50,00,230))
-    					draw.SimpleTextOutlined("Cloaked SWT - "..v:Nick(),"SWT-HUD-01",screenPos.x+7,screenPos.y,Color(250,250,250),TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER,1,Color(255,0,0,255))
-    					draw.SimpleTextOutlined(math.Round(dist/52.521,0).." m","SWT-HUD-01",screenPos.x+7,screenPos.y+13,Color(250,250,250),TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER,1,Color(255,0,0,255))    					
-    				end
-    			end
-    		end
-    	end
-    end
+								if relation_name == "Known" then
+									draw.SimpleTextOutlined("Name: " .. v:GetName(), "SWT-HUD-01",x1-4,y1,Color(250,250,250),TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(0,0,0,255))
+									y1 = y1 + 14
+								end
+
+								draw.SimpleTextOutlined("Status: Alive", "SWT-HUD-01",x1-4,y1,Color(250,250,250),TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(0,0,0,255))
+								y1 = y1 + 14
+
+								if SWT_CM.Config.ESPInformations["health"] then
+									draw.SimpleTextOutlined("HP: "..v:Health(),"SWT-HUD-01",x1-4,y1,Color(250,250,250),TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(0,0,0,255))
+									y1 = y1 + 14
+								end
+								
+								if SWT_CM.Config.ESPInformations["armor"] then
+									if v:IsPlayer() then
+										draw.SimpleTextOutlined("AP: " .. v:Armor(), "SWT-HUD-01", x1 - 4, y1, Color(250,250,250), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 1, Color(0,0,0,255))
+									end
+								end
+							else
+								draw.SimpleTextOutlined("Status: Dead","SWT-HUD-01", x1-4, origy1, Color(250,250,250), TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(255,0,0,255)) y1=y1+14
+							end
+						end
+					end
+				elseif dist < 2652 and dist > 35 then
+					if v:IsNPC() or v:Alive() then
+						local bone = v:LookupBone("ValveBiped.Bip01_Head1")
+						if (v:IsPlayer() or v:IsNPC()) and isnumber(bone) == true then
+							pos = v:GetBonePosition(bone)
+						end
+
+						local screenPos = pos:ToScreen()
+						local relation_name, relation_type, relation_color = LocalPlayer():GetRelationType(v)
+
+						if not v:IsCloaked() then
+							draw.RoundedBox(10,screenPos.x-5,screenPos.y-5,10,10,Color(relation_color.r,relation_color.g,relation_color.b))
+							draw.SimpleText(relation_type, "SWT-HUD-01", screenPos.x + 7, screenPos.y, Color(relation_color.r,relation_color.g,relation_color.b), TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
+							draw.SimpleText(math.Round(dist/52.521,0) .. " m", "SWT-HUD-01", screenPos.x + 7, screenPos.y + 13, Color(relation_color.r,relation_color.g,relation_color.b), TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
+						else
+							draw.RoundedBox(10,screenPos.x-5,screenPos.y-5,10,10,Color(50,00,230))
+							draw.SimpleText(relation_type .. " (Cloked)", "SWT-HUD-01", screenPos.x + 7, screenPos.y, Color(relation_color.r,relation_color.g,relation_color.b), TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
+							draw.SimpleText(math.Round(dist/52.521,0) .. " m", "SWT-HUD-01", screenPos.x + 7, screenPos.y + 13, Color(relation_color.r,relation_color.g,relation_color.b), TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
+						end
+					end
+				end
+			end
+		end
+	end
 end)
 
 hook.Add("HUDPaintBackground","DrawSWTCloakEffect",function()
@@ -279,3 +315,27 @@ hook.Add("Think", "SWT_CM.BatterySystem", function()
     	SWT_CM:CloakThink(LocalPlayer())
 	end
 end)
+
+--[==[
+SWT_CM.PlayerRelations = SWT_CM.PlayerRelations or {}
+--[[
+	SWT_CM.PlayerRelations[steamId64] = {relations}
+]]--
+
+function Player_Meta:AddToRelations(steamId64)
+	if not istable(SWT_CM.PlayerRelations[self:SteamID64()]) then
+		SWT_CM.PlayerRelations[self:SteamID64()] = {}
+	end
+
+	local oldRelations = table.Copy(self:GetRelations())
+	if table.HasValue(oldRelations, steamId64) then
+		return
+	end
+	
+	table.insert(oldRelations, steamId64)
+end
+
+function Player_Meta:GetRelations()
+	return SWT_CM.PlayerRelations[self:SteamID64()] or {}
+end
+]==]

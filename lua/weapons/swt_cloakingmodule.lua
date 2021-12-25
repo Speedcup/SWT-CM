@@ -76,6 +76,16 @@ function SWEP:PrimaryAttack()
 end
 
 function SWEP:SecondaryAttack()
+	if CLIENT then
+		local trace = LocalPlayer():GetEyeTrace()
+		local ent = trace.Entity
+
+		if IsValid(ent) and LocalPlayer():GetPos():Distance(ent:GetPos()) <= SWT_CM.Config.ESPDistance then	--and ent:IsPlayer()
+			LocalPlayer():AddToRelations(ent:SteamID64())
+		end
+
+		self:SetNextSecondaryFire(CurTime() + SWT_CM.Config.DefaultSWEPCooldown)
+	end
 end
 
 SWEP.ReloadCooldown = 0

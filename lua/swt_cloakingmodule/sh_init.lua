@@ -22,7 +22,7 @@
 local Player = FindMetaTable("Player")
 
 function SWT_CM:CloakThink(ply)
-	if not (IsValid(ply) or ply:Alive() or SWT_CM.Config.EnableBatterySystem) then
+	if not (IsValid(ply) or ply:Alive() or ply:IsPlayer() or SWT_CM.Config.EnableBatterySystem) then
 		return false
 	end
 
@@ -55,6 +55,8 @@ end
 
 -- Disable footsteps while cloaked.
 hook.Add( "PlayerFootstep", "SWT_CM.DisableFootstepsWhileCloaked", function(ply, pos, foot, sound, volume, filter)
+	if ply:IsBot() then return end
+
 	if SWT_CM.Config.DisableFootstepsWhileCloaked and ply:GetNWBool("SWT_CM.IsCloaked", false) then
 		return true
 	end
