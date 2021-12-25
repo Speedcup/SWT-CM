@@ -285,12 +285,17 @@ hook.Add("HUDPaint","DrawSWTVisorEffect", function()
 	end
 end)
 
-hook.Add("HUDPaintBackground","DrawSWTCloakEffect",function()
-	if SWT_CM.ESP == true then
-		draw.DrawColoredBlurRect(-1,-1, ScrW() + 2, ScrH() + 2, Color(0, 0, 0, 150), 3, 1, 0)
-		if not LocalPlayer():Alive() then
-			SWT_CM.ESP = false
+hook.Add("HUDPaintBackground", "SWT_CM.DrawSWTCloakEffect",function()
+	if LocalPlayer():HasWeapon("swt_cloakingmodule") then
+		if SWT_CM.ESP then
+			draw.DrawColoredBlurRect(-1,-1, ScrW() + 2, ScrH() + 2, Color(0, 0, 0, 150), 3, 1, 0)
+
+			if not LocalPlayer():Alive() then
+				SWT_CM.ESP = false
+			end
 		end
+	else
+		SWT_CM.ESP = false
 	end
 end)
 

@@ -103,12 +103,14 @@ end)
 hook.Add("PlayerSpawn", "SWT_CM.ResetCloakOnRespawn", function(ply)
 	if ply:IsBot() then return end
 
-	SWT_CM:Cloak(ply, false)
-	ply.OldDraw = ply.Draw
+	if ply:IsCloaked() then
+		SWT_CM:Cloak(ply, false)
+		ply.OldDraw = ply.Draw
 
-	function ply:Draw(flags)
-		if not ply:IsCloaked() then
-			ply.OldDraw(flags)
+		function ply:Draw(flags)
+			if not ply:IsCloaked() then
+				ply.OldDraw(flags)
+			end
 		end
 	end
 end)
@@ -144,13 +146,11 @@ SWT.DamageList = {
 
 hook.Add("EntityTakeDamage", "SWT_CM.UncloakOnDamage", function(ent, dmg)
 	-- Check whether the damage is greater than 1 and "real". Damage random caused by bad maps are excluded by this method.
-	if ent:IsPlayer() and dmg:GetDamage() >= 1 then
-		if ent:IsCloaked() then
-			-- For the moment deactivated; TODO
-			--if table.HasValue(SWT.DamageList, dmg:GetDamageType()) then
-				SWT_CM:Cloak(ent, false)
-			--end
-		end
+	if ent:IsPlayer() and dmg:GetDamage() >= 1 and ent:IsCloaked() then
+		-- For the moment deactivated; TODO
+		--if table.HasValue(SWT.DamageList, dmg:GetDamageType()) then
+			SWT_CM:Cloak(ent, false)
+		--end
 	end
 end)
 

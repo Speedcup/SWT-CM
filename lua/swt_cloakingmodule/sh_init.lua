@@ -57,7 +57,7 @@ end
 hook.Add( "PlayerFootstep", "SWT_CM.DisableFootstepsWhileCloaked", function(ply, pos, foot, sound, volume, filter)
 	if ply:IsBot() then return end
 
-	if SWT_CM.Config.DisableFootstepsWhileCloaked and ply:GetNWBool("SWT_CM.IsCloaked", false) then
+	if SWT_CM.Config.DisableFootstepsWhileCloaked and ply:IsCloaked() then
 		return true
 	end
 end)
