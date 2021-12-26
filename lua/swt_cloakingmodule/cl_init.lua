@@ -25,6 +25,11 @@
 --]]-------------------------------------------------------------------
 local Player_Meta = FindMetaTable("Player")
 
+SWT_CM.PlayerRelations = SWT_CM.PlayerRelations or {}
+--[[
+	SWT_CM.PlayerRelations[ent] = {relations}
+]]--
+
 --[[
 	Function: Player:AddToRelations(ply)
 	Meta: Player (the current cloaked swt, localplayer)
@@ -32,35 +37,66 @@ local Player_Meta = FindMetaTable("Player")
 	Params:
 		ply - ply to add to players relations.
 ]]
-function Player_Meta:AddToRelations(ply)
+function Player_Meta:AddToRelations(ent)
+	-- Check if the table exists, if not, creatae it.
+	if not istable(SWT_CM.PlayerRelations[self:SteamID64()]) then
+		SWT_CM.PlayerRelations[self:SteamID64()] = {}
+	end
+
+	-- Just copy the old relations and add the new one.
 	local oldRelations = table.Copy(self:GetRelations())
 
-	if table.HasValue(oldRelations, ply) then
+	-- Check whether the relation already exists.
+	if table.HasValue(oldRelations, ent) then
 		return
 	end
-
-	table.insert(oldRelations, ply)
-	cookie.Set("SWT_CM.Relations", util.TableToJSON(oldRelations))
+	
+	table.insert(oldRelations, ent)
+	SWT_CM.PlayerRelations[self:SteamID64()] = oldRelations
 end
 
+--[[
+	Function: Player:GetRelations() -> table
+	Meta: Player (the current cloaked swt, localplayer)
+
+	Returns:
+		table - relations, every relation of the player.
+			-> {
+				[ent1] = {...},
+				[ent2] = {...}
+			}
+]]
 function Player_Meta:GetRelations()
-	return util.JSONToTable(cookie.GetString("SWT_CM.Relations", "[]"))
+	return SWT_CM.PlayerRelations[self:SteamID64()] or {}
 end
 
+--[[
+	Function: Player_Meta:GetRelationType(ent: Entity) -> table
+	Meta: Player (the current cloaked swt, localplayer)
+
+	Returns:
+		table - relationType
+]]
 function Player_Meta:GetRelationType(ent)
 	if not IsValid(ent) then
-		return "Unknown", "Unknown", {r = 255, g = 255, b = 255}
+		return SWT_CM.Config.RelationTypes["unknown"]
 	end
 
-	if ent:IsPlayer() and table.HasValue(self:GetRelations(), ent:SteamID64()) then
-		return "Known", "Scanned Player", {r = 0, g = 255, b = 0}
-	elseif ent:IsPlayer() and not table.HasValue(self:GetRelations(), ent:SteamID64()) then
-		return "Unknown", "Player", {r = 255, g = 255, b = 255}
-	elseif ent:IsNPC() and ent:GetClass() == "npc_combine_s" then
-		return ent:GetName(), "Enemy", {r = 255, g = 0, b = 0}
-	end
+	-- First of all, check if any relation saved exists.
+	if table.HasValue(self:GetRelations(), ent) then
+		-- Enemy Check
+		if SWT_CM.Config.RelationEnemy(ent, LocalPlayer()) then
+			return SWT_CM.Config.RelationTypes["enemy"]
+		end
 
-	return "Unkown", "Unkown", {r = 255, g = 255, b = 255}
+		if SWT_CM.Config.RelationAlly(ent, LocalPlayer()) then
+			return SWT_CM.Config.RelationTypes["ally"]
+		end
+
+		return SWT_CM.Config.RelationTypes["known"]
+	end
+	
+	return SWT_CM.Config.RelationTypes["unknown"]
 end
 
 function SWT_CM:ToggleHUD()
@@ -72,6 +108,18 @@ function SWT_CM:ToggleHUD()
 
 	SWT_CM.ESP = not SWT_CM.ESP
 end
+
+-- Reset RelationTable on disconnect :)!
+gameevent.Listen( "player_disconnect" )
+hook.Add( "player_disconnect", "SWT_CM.PlayerDisconnect", function( data )
+	if SWT_CM.Config.ResetRelationsOnDisconnect then
+		local steamId = data.networkid
+		local steamId64 = util.SteamIDTo64(steamId)
+		if table.HasValue(SWT_CM.PlayerRelations, steamId64) then
+			SWT_CM.PlayerRelations[steamId64] = nil
+		end
+	end
+end )
 
 --[[-------------------------------------------------------------------
 	Font Creation
@@ -218,8 +266,9 @@ hook.Add("HUDPaint","DrawSWTVisorEffect", function()
 					if v:IsPlayer() or v:IsNPC() then
 						local x1, y1, x2, y2 = coordinates(v)
 
-						local relation_name, relation_type, relation_color = LocalPlayer():GetRelationType(v)
-						surface.SetDrawColor(relation_color.r, relation_color.g, relation_color.b)
+						local relationTable = LocalPlayer():GetRelationType(v)
+						local relation_color_r, relation_color_g, relation_color_b = relationTable.color:Unpack()
+						surface.SetDrawColor(relation_color_r, relation_color_g, relation_color_b)
 
 						if (0 < x2 and x1 < ScrW()) and (0 < y2 and y1 < ScrH()) then 
 							surface.DrawLine( x1, y1, x2, y1 )
@@ -229,14 +278,17 @@ hook.Add("HUDPaint","DrawSWTVisorEffect", function()
 
 							origx1, origx2, origy1, origy2 = x1, x2, y1, y2
 
-							draw.SimpleTextOutlined("Type: " .. relation_type, "SWT-HUD-01",x2 + 4,y1,Color(250,250,250),TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP,1,Color(0,0,0,255)) y1=y1+14
-							draw.SimpleTextOutlined("Relation: " .. relation_name, "SWT-HUD-01",x2 + 4,y1,Color(250,250,250),TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP,1,Color(0,0,0,255)) y1=y1+14
-							
+							draw.SimpleTextOutlined("Type (Relation): " .. relationTable.name, "SWT-HUD-01", x2 + 4, y1, Color(250,250,250), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, Color(0,0,0,255))
+							y1 = y1 + 14
+
 							if v:Health() > 0 then
-								if v:GetActiveWeapon() ~= NULL then draw.SimpleTextOutlined("Weapon: "..v:GetActiveWeapon():GetPrintName(),"SWT-HUD-01",x2+4,y1,Color(250,250,250),TEXT_ALIGN_LEFT,TEXT_ALIGN_TOP,1,Color(0,0,0,255)) y1=y1+14 end
+								if v:GetActiveWeapon() ~= NULL then
+									draw.SimpleTextOutlined("Weapon: " .. v:GetActiveWeapon():GetPrintName(), "SWT-HUD-01", x2 + 4, y1, Color(250,250,250), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1, Color(0,0,0,255))
+									y1 = y1 + 14
+								end
 								y1 = origy1
 
-								if relation_name == "Known" then
+								if relationTable.name ~= "Unknown" then
 									draw.SimpleTextOutlined("Name: " .. v:GetName(), "SWT-HUD-01",x1-4,y1,Color(250,250,250),TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(0,0,0,255))
 									y1 = y1 + 14
 								end
@@ -245,7 +297,7 @@ hook.Add("HUDPaint","DrawSWTVisorEffect", function()
 								y1 = y1 + 14
 
 								if SWT_CM.Config.ESPInformations["health"] then
-									draw.SimpleTextOutlined("HP: "..v:Health(),"SWT-HUD-01",x1-4,y1,Color(250,250,250),TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(0,0,0,255))
+									draw.SimpleTextOutlined("HP: " .. v:Health(), "SWT-HUD-01", x1 - 4, y1, Color(250,250,250), TEXT_ALIGN_RIGHT, TEXT_ALIGN_TOP, 1, Color(0,0,0,255))
 									y1 = y1 + 14
 								end
 								
@@ -255,7 +307,7 @@ hook.Add("HUDPaint","DrawSWTVisorEffect", function()
 									end
 								end
 							else
-								draw.SimpleTextOutlined("Status: Dead","SWT-HUD-01", x1-4, origy1, Color(250,250,250), TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(255,0,0,255)) y1=y1+14
+								draw.SimpleTextOutlined("Status: Dead", "SWT-HUD-01", x1-4, origy1, Color(250,250,250), TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(255,0,0,255)) y1=y1+14
 							end
 						end
 					end
@@ -267,16 +319,17 @@ hook.Add("HUDPaint","DrawSWTVisorEffect", function()
 						end
 
 						local screenPos = pos:ToScreen()
-						local relation_name, relation_type, relation_color = LocalPlayer():GetRelationType(v)
+						local relationTable = LocalPlayer():GetRelationType(v)
+						local relation_color_r, relation_color_g, relation_color_b = relationTable.color:Unpack()
 
 						if not v:IsCloaked() then
-							draw.RoundedBox(10,screenPos.x-5,screenPos.y-5,10,10,Color(relation_color.r,relation_color.g,relation_color.b))
-							draw.SimpleText(relation_type, "SWT-HUD-01", screenPos.x + 7, screenPos.y, Color(relation_color.r,relation_color.g,relation_color.b), TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
-							draw.SimpleText(math.Round(dist/52.521,0) .. " m", "SWT-HUD-01", screenPos.x + 7, screenPos.y + 13, Color(relation_color.r,relation_color.g,relation_color.b), TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
+							draw.RoundedBox(10, screenPos.x-5, screenPos.y - 5, 10, 10, relationTable.color)
+							draw.SimpleText(relationTable.name, "SWT-HUD-01", screenPos.x + 7, screenPos.y, relationTable.color, TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
+							draw.SimpleText(math.Round(dist/52.521,0) .. " m", "SWT-HUD-01", screenPos.x + 7, screenPos.y + 13, relationTable.color, TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
 						else
-							draw.RoundedBox(10,screenPos.x-5,screenPos.y-5,10,10,Color(50,00,230))
-							draw.SimpleText(relation_type .. " (Cloked)", "SWT-HUD-01", screenPos.x + 7, screenPos.y, Color(relation_color.r,relation_color.g,relation_color.b), TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
-							draw.SimpleText(math.Round(dist/52.521,0) .. " m", "SWT-HUD-01", screenPos.x + 7, screenPos.y + 13, Color(relation_color.r,relation_color.g,relation_color.b), TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
+							draw.RoundedBox(10, screenPos.x - 5, screenPos.y - 5, 10, 10,Color(50,00,230))
+							draw.SimpleText(relationTable.name .. " (Cloked)", "SWT-HUD-01", screenPos.x + 7, screenPos.y, relationTable.color, TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
+							draw.SimpleText(math.Round(dist / 52.521, 0) .. " m", "SWT-HUD-01", screenPos.x + 7, screenPos.y + 13, relationTable.color, TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
 						end
 					end
 				end
@@ -322,31 +375,7 @@ function draw.DrawColoredBlurRect(xpos, ypos, width, height, color, layers, dens
 end
 
 hook.Add("Think", "SWT_CM.BatterySystem", function()
-	if SWT_CM.Config.EnableBatterySystem then
+	if SWT_CM.Config.EnableBatterySystem and LocalPlayer():HasWeapon("swt_cloakingmodule") then
     	SWT_CM:CloakThink(LocalPlayer())
 	end
 end)
-
---[==[
-SWT_CM.PlayerRelations = SWT_CM.PlayerRelations or {}
---[[
-	SWT_CM.PlayerRelations[steamId64] = {relations}
-]]--
-
-function Player_Meta:AddToRelations(steamId64)
-	if not istable(SWT_CM.PlayerRelations[self:SteamID64()]) then
-		SWT_CM.PlayerRelations[self:SteamID64()] = {}
-	end
-
-	local oldRelations = table.Copy(self:GetRelations())
-	if table.HasValue(oldRelations, steamId64) then
-		return
-	end
-	
-	table.insert(oldRelations, steamId64)
-end
-
-function Player_Meta:GetRelations()
-	return SWT_CM.PlayerRelations[self:SteamID64()] or {}
-end
-]==]

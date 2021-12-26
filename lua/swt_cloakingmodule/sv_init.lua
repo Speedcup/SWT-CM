@@ -90,15 +90,12 @@ end
 hook.Add("Think", "SWT_CM.BatterySystem", function()
 	if SWT_CM.Config.EnableBatterySystem then
 		for _, ply in pairs(player.GetHumans()) do
-			SWT_CM:CloakThink(ply)
+			if ply:HasWeapon("swt_cloakingmodule") then
+				SWT_CM:CloakThink(ply)
+			end
 		end
 	end
 end)
-
--- Just an alias for SWT_CM:Cloak(ply)
---function Player:DoSWTCloak()
---	SWT_CM:Cloak( self )
---end
 
 hook.Add("PlayerSpawn", "SWT_CM.ResetCloakOnRespawn", function(ply)
 	if ply:IsBot() then return end
@@ -115,42 +112,10 @@ hook.Add("PlayerSpawn", "SWT_CM.ResetCloakOnRespawn", function(ply)
 	end
 end)
 
--- TODO
--- Every GMod Damage 
---[[
-SWT.DamageList = {
-	0,
-	1,
-	2,
-	4,
-	8,
-	16,
-	32,
-	64,
-	128,
-	256,
-	1024,
-	2048,
-	4096,
-	16384,
-	65536,
-	2097152,
-	16777216,
-	67108864,
-	134217728,
-	1073741824,
-	536870912,
-	2147483648
-}
-]]
-
 hook.Add("EntityTakeDamage", "SWT_CM.UncloakOnDamage", function(ent, dmg)
 	-- Check whether the damage is greater than 1 and "real". Damage random caused by bad maps are excluded by this method.
 	if ent:IsPlayer() and dmg:GetDamage() >= 1 and ent:IsCloaked() then
-		-- For the moment deactivated; TODO
-		--if table.HasValue(SWT.DamageList, dmg:GetDamageType()) then
-			SWT_CM:Cloak(ent, false)
-		--end
+		SWT_CM:Cloak(ent, false)
 	end
 end)
 
