@@ -255,7 +255,19 @@ hook.Add("HUDPaint","DrawSWTVisorEffect", function()
 		end
 
 		--ESP + NPC/Player-Marker + DontDrawCloakedPeople
-		for k,v in pairs( player.GetAll() ) do
+
+		local entities = {}
+		for k, v in pairs(player.GetAll()) do
+			entities[k] = v
+		end
+
+		for k, v in pairs(ents.GetAll()) do
+			if v:IsNPC() or v:IsNextBot() then
+				entities[k] = v
+			end
+		end
+
+		for k, v in pairs( entities ) do
 			--if v:GetNWBool("SWT.cloaked",false)==true and IsValid(v:GetActiveWeapon()) then v:GetActiveWeapon():SetNoDraw(true) end
 			if v ~= LocalPlayer() and SWT_CM.ESP and ply ~= nil then
 				local pos = v:GetPos()
@@ -289,7 +301,12 @@ hook.Add("HUDPaint","DrawSWTVisorEffect", function()
 								y1 = origy1
 
 								if relationTable.name ~= "Unknown" then
-									draw.SimpleTextOutlined("Name: " .. v:GetName(), "SWT-HUD-01",x1-4,y1,Color(250,250,250),TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(0,0,0,255))
+									if v:IsPlayer() then
+										draw.SimpleTextOutlined("Name: " .. v:GetName(), "SWT-HUD-01",x1-4,y1,Color(250,250,250),TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(0,0,0,255))
+									else
+										draw.SimpleTextOutlined("Class: " .. v:GetClass(), "SWT-HUD-01",x1-4,y1,Color(250,250,250),TEXT_ALIGN_RIGHT,TEXT_ALIGN_TOP,1,Color(0,0,0,255))
+									end
+
 									y1 = y1 + 14
 								end
 
@@ -322,7 +339,7 @@ hook.Add("HUDPaint","DrawSWTVisorEffect", function()
 						local relationTable = LocalPlayer():GetRelationType(v)
 						local relation_color_r, relation_color_g, relation_color_b = relationTable.color:Unpack()
 
-						if not v:IsCloaked() then
+						if (v:IsPlayer() and not v:IsCloaked()) or v:IsNPC() or v:IsNextBot() then
 							draw.RoundedBox(10, screenPos.x-5, screenPos.y - 5, 10, 10, relationTable.color)
 							draw.SimpleText(relationTable.name, "SWT-HUD-01", screenPos.x + 7, screenPos.y, relationTable.color, TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
 							draw.SimpleText(math.Round(dist/52.521,0) .. " m", "SWT-HUD-01", screenPos.x + 7, screenPos.y + 13, relationTable.color, TEXT_ALIGN_LEFT,TEXT_ALIGN_CENTER)
