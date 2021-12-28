@@ -35,13 +35,13 @@ function SWT_CM:Print(text, type)
 	type = type or "debug"
 
 	if type == "info" then
-		MsgC(Color(50, 200, 200), "[SWT-Cloaking] " .. text .. "\n")
+		MsgC(Color(60, 220, 200), "[SWT-Cloaking] " .. text .. "\n")
 	elseif type == "error" then
 		MsgC(Color(255, 0, 0), "[SWT-Cloaking] " .. text .. "\n")
 	elseif type == "success" then
 		MsgC(Color(0, 255, 0), "[SWT-Cloaking] " .. text .. "\n")
 	elseif (type == "debug" and SWT_CM.DebugMode) then
-		MsgC(Color(255, 0, 0), "[SWT-Cloaking] " .. text .. "\n")
+		MsgC(Color(50, 255, 200), "[SWT-Cloaking] " .. text .. "\n")
 	end
 end
 
