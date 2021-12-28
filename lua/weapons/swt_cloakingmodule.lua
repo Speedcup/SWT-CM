@@ -22,11 +22,11 @@
 AddCSLuaFile()
 
 SWEP.PrintName = "SWT Cloaking Module"
-SWEP.Author = "Speedcup & Schmockwurst"
 SWEP.Category = "[SW:RP] Speedcup & Schmockwurst"
 
+SWEP.Author = "Speedcup & Schmockwurst"
 SWEP.Purpose = "You can now cloak yourself! Like a real SWT! HOW COOL?!"
-SWEP.Instructions = "LeftClick: Cloak / Uncloak\nRightClick: Coming Soon!\nReload: Toggle Hud"
+SWEP.Instructions = "LeftClick: Cloak / Uncloak\nRightClick: Scan a Player/NPC!\nReload: Toggle Hud"
 
 SWEP.HoldType = "passive"
 
@@ -36,7 +36,7 @@ SWEP.SlotPos = 100
 SWEP.Spawnable = true
 
 SWEP.ViewModel = ""
-SWEP.WorldModel = ""
+SWEP.WorldModel = "models/Items/combine_rifle_ammo01.mdl"
 SWEP.ViewModelFOV = 54
 SWEP.UseHands = false
 
@@ -97,7 +97,4 @@ function SWEP:Reload()
 
 		self.ReloadCooldown = CurTime() + SWT_CM.Config.DefaultSWEPCooldown
 	end
-end
-
-function SWEP:DrawWeaponSelection(x, y, w, h, a)	
 end

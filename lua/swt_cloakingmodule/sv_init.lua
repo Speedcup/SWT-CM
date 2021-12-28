@@ -114,7 +114,7 @@ end)
 
 hook.Add("EntityTakeDamage", "SWT_CM.UncloakOnDamage", function(ent, dmg)
 	-- Check whether the damage is greater than 1 and "real". Damage random caused by bad maps are excluded by this method.
-	if ent:IsPlayer() and dmg:GetDamage() >= 1 and ent:IsCloaked() then
+	if ent:IsPlayer() and ent:IsCloaked() and dmg:GetDamage() >= 1 then
 		SWT_CM:Cloak(ent, false)
 	end
 end)

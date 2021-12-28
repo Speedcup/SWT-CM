@@ -71,5 +71,5 @@ function SWT_CM:Load(time)
 end
 
 local start_time = SysTime()
-SWT_CM:Print("Start Loading of SWT-Cloaking Module! [" ..math.Round(SysTime() - start_time, 4) .. "s]")
+SWT_CM:Print("Loading started... - [" ..math.Round(SysTime() - start_time, 4) .. "s]")
 SWT_CM:Load(start_time)
