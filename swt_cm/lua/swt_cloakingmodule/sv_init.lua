@@ -20,35 +20,6 @@
 --]]-------------------------------------------------------------------
 
 local Player = FindMetaTable("Player")
---[[
-	Function: SWT_CM:CanCloak( ply: user )
-
-	Checks if a player can cloak.
-
-	Returns:
-		bool - canCloak
-]]
-function SWT_CM:CanCloak( ply )
-	if not IsValid(ply) or ply:IsBot() then
-		return false
-	end
-
-	-- Players should not be able to cloak themselves, when its disabled in water.
-	if SWT_CM.Config.DisableCloakInWater then
-		if ply:WaterLevel() >= 1 then
-			return false
-		end
-	end
-
-	if SWT_CM.Config.EnableBatterySystem then
-		local battery = ply.CloakBattery or SWT_CM.Config.MaxBattery
-		if battery < SWT_CM.Config.MinimumBattery then
-			return false
-		end
-	end
-	
-	return true
-end
 
 function SWT_CM:Cloak( ply, force )
 	if not IsValid(ply) or ply:IsBot() then
@@ -84,6 +55,33 @@ function SWT_CM:Cloak( ply, force )
 		ply:SetNWBool("SWT_CM.IsCloaked", false)
 
 		ply:SendLua([[surface.PlaySound("swt_cm/cloak_deactivation.mp3")]])
+	end
+end
+
+function SWT_CM:ChangeESP( ply, force )
+	if not IsValid(ply) or ply:IsBot() then
+		return false
+	end
+	
+	local hasESPEnabled = ply:HasESPEnabled()
+
+	-- If force is available and not nil, overwrite isCloaked with the force value.
+	if force then
+		hasESPEnabled = force
+	end
+
+	if not hasESPEnabled then
+		if force == nil then
+			if not SWT_CM:CanESP(ply) then
+				return
+			end
+		end
+
+		ply:SetNWBool("SWT_CM.HasESPEnabled", true)
+		ply:SendLua([[surface.PlaySound("swt_cm/esp_activation.mp3")]])
+	else
+		ply:SetNWBool("SWT_CM.HasESPEnabled", false)
+		ply:SendLua([[surface.PlaySound("swt_cm/esp_deactivation.mp3")]])
 	end
 end
 
@@ -131,10 +129,14 @@ end)
 
 -- InWater Check
 hook.Add("Think", "SWT_CM.DisableWhileInWater", function()
-	if SWT_CM.Config.DisableCloakInWater then
+	if SWT_CM.Config.DisableCloakInWater or SWT_CM.Config.DisableESPInWater then
 		for k, ply in pairs(player.GetHumans()) do
-			if ply:IsCloaked() and ply:WaterLevel() == 1 then -- WaterLevel => https://wiki.facepunch.com/gmod/Entity:WaterLevel => 1 = Slightly submerged (at least to the feet) // should be enough? If too less, change it the way you want.
-				SWT_CM:Cloak(ply, false)
+			if ply:WaterLevel() == 1 then -- WaterLevel => https://wiki.facepunch.com/gmod/Entity:WaterLevel => 1 = Slightly submerged (at least to the feet) // should be enough? If too less, change it the way you want.
+				if ply:IsCloaked() then
+					SWT_CM:Cloak(ply, false)
+				end
+
+
 			end
 		end
 	end

@@ -29,19 +29,46 @@ SWT_CM.DebugMode = SWT_CM.DebugMode or true
 
 	Just a function to print something to console.
 ]]
-function SWT_CM:Print(text, type)
+function SWT_CM:Print(text, type, chatPrint)
 	-- Set default values, when a param wasnt set.
 	text = text or ""
 	type = type or "debug"
+	chatPrint = chatPrint or false
+	
+	INFO = Color(60, 220, 200)
+	ERROR = Color(255, 0, 0)
+	SUCCESS = Color(0, 255, 0)
+	DEBUG = Color(50, 255, 200)
+	NEUTRAL = Color(255, 255, 255)
+
+	PREFIX = "[SWT-Cloaking] "
+	CONSOLE_MESSAGE = (text .. "\n")
+	CHAT_MESSAGE = text
 
 	if type == "info" then
-		MsgC(Color(60, 220, 200), "[SWT-Cloaking] " .. text .. "\n")
+		MsgC(INFO, PREFIX, NEUTRAL, CONSOLE_MESSAGE)
+
+		if CLIENT and chatPrint then
+			chat.AddText(INFO, PREFIX, NEUTRAL, CHAT_MESSAGE)
+		end
 	elseif type == "error" then
-		MsgC(Color(255, 0, 0), "[SWT-Cloaking] " .. text .. "\n")
+		MsgC(ERROR, PREFIX, NEUTRAL, CONSOLE_MESSAGE)
+
+		if CLIENT and chatPrint then
+			chat.AddText(ERROR, PREFIX, NEUTRAL, CHAT_MESSAGE)
+		end
 	elseif type == "success" then
-		MsgC(Color(0, 255, 0), "[SWT-Cloaking] " .. text .. "\n")
+		MsgC(SUCCESS, PREFIX, NEUTRAL, CONSOLE_MESSAGE)
+
+		if CLIENT and chatPrint then
+			chat.AddText(SUCCESS, PREFIX, NEUTRAL, CHAT_MESSAGE)
+		end
 	elseif (type == "debug" and SWT_CM.DebugMode) then
-		MsgC(Color(50, 255, 200), "[SWT-Cloaking] " .. text .. "\n")
+		MsgC(DEBUG, PREFIX, NEUTRAL, CONSOLE_MESSAGE)
+
+		if CLIENT and chatPrint then
+			chat.AddText(DEBUG, PREFIX, NEUTRAL, CHAT_MESSAGE)
+		end
 	end
 end
 

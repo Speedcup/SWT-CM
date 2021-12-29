@@ -53,6 +53,12 @@ function Player_Meta:AddToRelations(ent)
 	
 	table.insert(oldRelations, ent)
 	SWT_CM.PlayerRelations[self:SteamID64()] = oldRelations
+
+	if ent:IsPlayer() then
+		SWT_CM:Print("Successfully added '" .. ent:GetName() .. "' as " .. self:GetRelationType(ent).name, "success", true)
+	else
+		SWT_CM:Print("Successfully added '" .. ent:GetClass() .. "' as " .. self:GetRelationType(ent).name, "success", true)
+	end
 end
 
 --[[
@@ -97,16 +103,6 @@ function Player_Meta:GetRelationType(ent)
 	end
 	
 	return SWT_CM.Config.RelationTypes["unknown"]
-end
-
-function SWT_CM:ToggleHUD()
-	if SWT_CM.ESP ~= true then
-		surface.PlaySound("swt_cm/esp_activation.mp3")
-	else
-		surface.PlaySound("swt_cm/esp_deactivation.mp3")
-	end
-
-	SWT_CM.ESP = not SWT_CM.ESP
 end
 
 -- Reset RelationTable on disconnect :)!
@@ -221,7 +217,7 @@ end)
 
 hook.Add("PrePlayerDraw", "SWT_CM.StopDrawingOfCloaked",function(ent)
 	if ent:IsCloaked() then
-		if SWT_CM.ESP == true then
+		if LocalPlayer():HasESPEnabled() then
 			return false
 		end
 
@@ -235,13 +231,13 @@ hook.Add("PrePlayerDraw", "SWT_CM.StopDrawingOfCloaked",function(ent)
 	end
 end)
 
-hook.Add("PreDrawHalos", "DrawYourselfWhileCloaked",function()
-	if SWT_CM.ESP then
+hook.Add("PreDrawHalos", "DrawYourselfWhileCloaked", function()
+	if LocalPlayer():HasESPEnabled() then
 		halo.Add(plys, Color(100, 100, 255), 2, 2, 1, false, false)
 	end
 end)
 
-hook.Add("HUDPaint","DrawSWTVisorEffect", function()
+hook.Add("HUDPaint", "SWT_CM.DrawVisorEffect", function()
 	if LocalPlayer():HasWeapon("swt_cloakingmodule") then
 		local w, h = ScrW(),ScrH()
 		ply = LocalPlayer()
@@ -267,9 +263,12 @@ hook.Add("HUDPaint","DrawSWTVisorEffect", function()
 			end
 		end
 
+		-- IDEA
+		-- Maybe create a poll in further future, whether we should add a "ESP Activated / Deactivated" Text :)
+
 		for k, v in pairs( entities ) do
 			--if v:GetNWBool("SWT.cloaked",false)==true and IsValid(v:GetActiveWeapon()) then v:GetActiveWeapon():SetNoDraw(true) end
-			if v ~= LocalPlayer() and SWT_CM.ESP and ply ~= nil then
+			if v ~= LocalPlayer() and LocalPlayer():HasESPEnabled() and ply ~= nil then
 				local pos = v:GetPos()
 				local dist = ply:GetPos():Distance( pos )
 				local crosshair = ply:GetEyeTrace().HitPos:ToScreen()
@@ -356,16 +355,10 @@ hook.Add("HUDPaint","DrawSWTVisorEffect", function()
 end)
 
 hook.Add("HUDPaintBackground", "SWT_CM.DrawSWTCloakEffect",function()
-	if LocalPlayer():HasWeapon("swt_cloakingmodule") then
-		if SWT_CM.ESP then
-			draw.DrawColoredBlurRect(-1,-1, ScrW() + 2, ScrH() + 2, Color(0, 0, 0, 150), 3, 1, 0)
-
-			if not LocalPlayer():Alive() then
-				SWT_CM.ESP = false
-			end
+	if LocalPlayer():HasWeapon("swt_cloakingmodule") and SWT_CM.Config.EnableESP then
+		if LocalPlayer():HasESPEnabled() then
+			draw.DrawColoredBlurRect(-1, -1, ScrW() + 2, ScrH() + 2, Color(0, 0, 0, 150), 3, 1, 0)
 		end
-	else
-		SWT_CM.ESP = false
 	end
 end)
 

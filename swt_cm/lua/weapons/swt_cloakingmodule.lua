@@ -63,7 +63,7 @@ end
 
 SWEP.PrimaryCooldown = 0
 function SWEP:PrimaryAttack()
-	if self.PrimaryCooldown < CurTime() then
+	if self.PrimaryCooldown < CurTime() and SWT_CM:CanCloak(self:GetOwner()) then
 		local cloaked = self:GetOwner():IsCloaked()
 
 		if SERVER then
@@ -75,24 +75,40 @@ function SWEP:PrimaryAttack()
 	end
 end
 
+SWEP.SecondaryCooldown = 0
 function SWEP:SecondaryAttack()
 	if CLIENT then
-		local trace = LocalPlayer():GetEyeTrace()
-		local ent = trace.Entity
+		if self.SecondaryCooldown < CurTime() then
+			local trace = LocalPlayer():GetEyeTrace()
+			local ent = trace.Entity
 
-		if IsValid(ent) and LocalPlayer():GetPos():Distance(ent:GetPos()) <= SWT_CM.Config.ESPDistance then	--and ent:IsPlayer()
-			LocalPlayer():AddToRelations(ent)
+			-- IDEA
+			-- Im not sure, should we only allow relationship additions (basically scanning) while in ESP Mode? (Maybe ill create a poll in further future)
+			--[[
+				if not LocalPlayer():HasESPEnabled() then
+					SWT_CM:Print("You've to activate your ESP module, to be able to scan people!", "error", true)
+					return
+				end
+			]]
+			if IsValid(ent) and LocalPlayer():GetPos():Distance(ent:GetPos()) <= SWT_CM.Config.ESPDistance then
+				LocalPlayer():AddToRelations(ent)
+			elseif IsValid(ent) and LocalPlayer():GetPos():Distance(ent:GetPos()) >= SWT_CM.Config.ESPDistance then
+				SWT_CM:Print("The player / npc you are currently looking at is too far away from you!", "error", true)
+			else
+				SWT_CM:Print("You've to look at a player / npc in front of you!", "error", true)
+			end
+
+			self.SecondaryCooldown = CurTime() + SWT_CM.Config.DefaultSWEPCooldown
 		end
-
-		self:SetNextSecondaryFire(CurTime() + SWT_CM.Config.DefaultSWEPCooldown)
 	end
 end
 
 SWEP.ReloadCooldown = 0
 function SWEP:Reload()
 	if self.ReloadCooldown < CurTime() then
-		if CLIENT then
-			SWT_CM:ToggleHUD()
+		if SERVER then
+			local ply = self:GetOwner()
+			SWT_CM:ChangeESP( ply )
 		end
 
 		self.ReloadCooldown = CurTime() + SWT_CM.Config.DefaultSWEPCooldown

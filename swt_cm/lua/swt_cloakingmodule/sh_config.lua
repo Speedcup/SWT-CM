@@ -33,6 +33,12 @@ SWT_CM.Config.DisableCloakInWater = true
 -- Default cooldown between client swep interactions. (Leftclick, Rightclick, Reload) - Just should prevent spamming.
 SWT_CM.Config.DefaultSWEPCooldown = 1
 
+-- Here you can completely enable / disable the esp feature.
+SWT_CM.Config.EnableESP = true
+
+-- Whether the esp mode should be deactivated in water. (Could cause performance issues, because we have to check the status of a player every second.)
+SWT_CM.Config.DisableESPInWater = true
+
 -- The minimum distance to see player informations
 SWT_CM.Config.ESPDistance = 500
 
