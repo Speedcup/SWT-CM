@@ -1,6 +1,7 @@
 ## 🌌 SWT-Cloaking Module 🌌
 The SWT-Cloaking Module Addon is back! Better than before.
 Its, what everyone needs, with an easy configuration possibility.
+
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=7zrej11xlgg
 " target="_blank"><img src="http://img.youtube.com/vi/7zrej11xlgg/0.jpg" 
 alt="SWT_CM_YT_VIDEO" width="600" height="400" border="10" /></a>
@@ -9,7 +10,7 @@ alt="SWT_CM_YT_VIDEO" width="600" height="400" border="10" /></a>
 
 ## 🛠️ Configuration 🛠️
 To configure the Addon, you've to install the configuration file from GitHub.
-Just [url=https://github.com/Speedcup/SWT-CM]click me[/url] and download the config!
+Just [click me](../swt_cm_config/lua/swt_cm_config/) and download the config!
 Everything is described with comments, so you should be able to configure the addon in any way you want as easily as possible.
 
 ---
