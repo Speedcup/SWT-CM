@@ -388,4 +388,122 @@ hook.Add("Think", "SWT_CM.BatterySystem", function()
 	if SWT_CM.Config.EnableBatterySystem and LocalPlayer():HasWeapon("swt_cloakingmodule") then
     	SWT_CM:CloakThink(LocalPlayer())
 	end
+
+	if SWT_CM.Config.EnableDisguiseMode then
+		if input.IsMouseDown(MOUSE_MIDDLE) then
+			SWT_CM:OpenJobChanger()
+		end
+	end
 end)
+
+--[[-------------------------------------------------------------------
+	UI-Disguise Creation
+	Here we gonna create the entire UserInterface for the SWT_CM.
+--]]-------------------------------------------------------------------
+function SWT_CM:OpenJobChanger()
+	if not SWT_CM.Config.EnableDisguiseMode then
+		return
+	end
+
+	if IsValid(self.Frame) then
+		self.Frame:Close()
+	end
+
+	if LocalPlayer():GetNWBool("SWT_CM.HasActiveCamo", false) then
+		net.Start("SWT_CM.StopCamo")
+		net.SendToServer()
+		return
+	end
+	
+	self.SelectedJob = nil
+	self.SelectedModel = nil
+
+	self.Frame = vgui.Create("DFrame")
+	self.Frame:SetSize(ScrW() * .2, ScrH() * .45)
+	self.Frame:SetTitle("[SWT] Cloaking Change")
+	self.Frame:Center()
+	self.Frame:MakePopup()
+
+	self.Category = vgui.Create("DComboBox", self.Frame)
+	self.Category:Dock(TOP)
+	self.Category:DockMargin(ScrW() * .001, ScrH() * .01, ScrW() * .001, 0)
+	self.Category:SetValue("Select Category...")
+	for k, v in pairs(DarkRP.getCategories()["jobs"]) do
+		if not table.HasValue(SWT_CM.Config.HiddenCategories, v.name) then
+			self.Category:AddChoice(v.name, DarkRP.getCategories()["jobs"][k])
+		end
+	end
+
+	self.Job = vgui.Create("DComboBox", self.Frame)
+	self.Job:Dock(TOP)
+	self.Job:DockMargin(ScrW() * .001, ScrH() * .01, ScrW() * .001, 0)
+	self.Job:SetValue("Select Job...")
+	self.Job:SetEnabled(false)
+	function self.Category:OnSelect(index, value, data)
+		SWT_CM.Job:Clear()
+		SWT_CM.Job:SetEnabled(true)
+
+		for k, v in pairs(RPExtraTeams) do
+			if (v.category == value) then
+				if not (table.HasValue(SWT_CM.Config.HiddenJobs, RPExtraTeams[k]["name"]) or table.HasValue(SWT_CM.Config.HiddenJobs, RPExtraTeams[k]["command"])) then
+					SWT_CM.Job:AddChoice(v.name, RPExtraTeams[k])
+				end
+			end
+		end
+	end
+	function self.Job:OnSelect(index, value, data)
+		SWT_CM.SelectedJob = data
+		SWT_CM:ReloadModels(data)
+	end
+	
+	self.ModelList = vgui.Create("DPanelList", self.Frame)
+	self.ModelList:Dock(TOP)
+	self.ModelList:DockMargin(ScrW() * .001, ScrH() * .01, ScrW() * .001, 0)
+	self.ModelList:SetHeight(ScrH() * .3)
+	self.ModelList:EnableVerticalScrollbar(true)
+	self.ModelList:EnableHorizontal(true)
+	self.ModelList:SetPadding(10)
+	self.ModelList:SetSpacing(5)
+
+	function self:ReloadModels(data)
+		self.ModelList:Clear()
+
+		local selected = nil
+		for _, v in pairs(data.model) do
+			local ModelIcon = vgui.Create("SpawnIcon")
+			ModelIcon:SetPos(64, 64)
+			ModelIcon:SetModel(v)
+			self.ModelList:AddItem(ModelIcon)
+			function ModelIcon:DoClick()
+				selected = self
+				SWT_CM.SelectedModel = v
+			end
+			local oldPaint = ModelIcon.Paint
+			function ModelIcon:Paint(width, height)
+				oldPaint(width, height)
+
+				if self == selected then
+					draw.RoundedBox(0, 0, 0, width, height, Color(75, 200, 250, 200))
+				end
+			end
+		end
+	end
+
+	self.StartButton = vgui.Create("DButton", self.Frame)
+	self.StartButton:Dock(BOTTOM)
+	self.StartButton:DockMargin(ScrW() * .001, 0, ScrW() * .001, ScrH() * .001)
+	self.StartButton:SetHeight(ScrH() * .04)
+	self.StartButton:SetText("Start Cloaking")
+	function self.StartButton:DoClick()
+		if not (SWT_CM.SelectedJob.command or SWT_CM.SelectedModel) then
+			return
+		end
+		
+		net.Start("SWT_CM.StartCamo")
+			net.WriteString(SWT_CM.SelectedJob.command)
+			net.WriteString(SWT_CM.SelectedModel)
+		net.SendToServer()
+
+		SWT_CM.Frame:Close()
+	end
+end

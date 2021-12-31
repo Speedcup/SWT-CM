@@ -46,12 +46,15 @@ function SWT_CM:Cloak( ply, force )
 		ply:RemoveAllDecals()
 		ply:SetNoTarget(true)
 		ply:DrawShadow(false)
+		ply:Flashlight( false )
+		ply:AllowFlashlight( false )
 		ply:SetNWBool("SWT_CM.IsCloaked", true)
 
 		ply:SendLua([[surface.PlaySound("swt_cm/cloak_activation.mp3")]])
 	else
 		ply:SetNoTarget(false)
 		ply:DrawShadow(true)
+		ply:AllowFlashlight( true )
 		ply:SetNWBool("SWT_CM.IsCloaked", false)
 
 		ply:SendLua([[surface.PlaySound("swt_cm/cloak_deactivation.mp3")]])
@@ -84,6 +87,49 @@ function SWT_CM:ChangeESP( ply, force )
 		ply:SendLua([[surface.PlaySound("swt_cm/esp_deactivation.mp3")]])
 	end
 end
+
+util.AddNetworkString("SWT_CM.StartCamo")
+net.Receive("SWT_CM.StartCamo", function(_, ply)
+	local jobCommand = net.ReadString()
+	local model = net.ReadString()
+
+	if IsValid(ply) and SWT_CM.Config.EnableDisguiseMode then
+		ply.OldModel = ply:GetModel()
+
+		ply:SetMaterial("models/props_combine/com_shield001a")
+
+		timer.Simple(2, function()
+			if IsValid(ply) then
+				ply:SetModel(model)
+
+				timer.Simple(2, function()
+					if IsValid(ply) then
+						ply:SetNWBool("SWT_CM.HasActiveCamo", true)
+						ply:SetMaterial("")
+					end
+				end)
+			end
+		end)
+	end
+end)
+
+util.AddNetworkString("SWT_CM.StopCamo")
+net.Receive("SWT_CM.StopCamo", function(_, ply)
+	if IsValid(ply) and SWT_CM.Config.EnableDisguiseMode then
+		ply:SetMaterial("models/props_combine/com_shield001a")
+
+		timer.Simple(1, function()
+			if IsValid(ply) then
+				ply:SetModel(ply.OldModel)
+
+				timer.Simple(1, function()
+					ply:SetMaterial("")
+					ply:SetNWBool("SWT_CM.HasActiveCamo", false)
+				end)
+			end
+		end)
+	end
+end)
 
 hook.Add("Think", "SWT_CM.BatterySystem", function()
 	if SWT_CM.Config.EnableBatterySystem then

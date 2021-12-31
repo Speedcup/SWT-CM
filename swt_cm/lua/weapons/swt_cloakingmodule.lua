@@ -95,7 +95,7 @@ function SWEP:SecondaryAttack()
 			elseif IsValid(ent) and LocalPlayer():GetPos():Distance(ent:GetPos()) >= SWT_CM.Config.ESPDistance then
 				SWT_CM:Print("The player / npc you are currently looking at is too far away from you!", "error", true)
 			else
-				SWT_CM:Print("You've to look at a player / npc in front of you!", "error", true)
+				SWT_CM:Print("You have to look at a player / npc in front of you!", "error", true)
 			end
 
 			self.SecondaryCooldown = CurTime() + SWT_CM.Config.DefaultSWEPCooldown

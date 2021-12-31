@@ -22,25 +22,27 @@
 SWT_CM:Print("Loading Custom Config...", "info")
 
 -- Should footsteps be disabled while a player is cloaked?
-SWT_CM.Config.DisableFootstepsWhileCloaked = true -- Default: True
+SWT_CM.Config.DisableFootstepsWhileCloaked = true
 
--- Whether cloaked people can only hear other cloaked people.
-SWT_CM.Config.OnlyCloakedCanHearCloaked = true -- Default: True
+-- Whether non-cloaked people cant hear cloaked people or not.
+-- Means everyone whos cloaked can only talk to cloaked people.
+-- Non-Cloaked people are hearable for non-cloaked people, but cloaked people cant speak with them.
+SWT_CM.Config.OnlyCloakedCanHearCloaked = true
 
 -- Whether the cloak should be deactivated in water. (Could cause performance issues, because we have to check the status of a player every second.)
-SWT_CM.Config.DisableCloakInWater = true -- Default: True
+SWT_CM.Config.DisableCloakInWater = true
 
 -- Default cooldown between client swep interactions. (Leftclick, Rightclick, Reload) - Just should prevent spamming.
-SWT_CM.Config.DefaultSWEPCooldown = 1 -- Default: 1
+SWT_CM.Config.DefaultSWEPCooldown = 1
 
 -- Here you can completely enable / disable the esp feature.
-SWT_CM.Config.EnableESP = true -- Default: True
+SWT_CM.Config.EnableESP = true
 
 -- Whether the esp mode should be deactivated in water. (Could cause performance issues, because we have to check the status of a player every second.)
-SWT_CM.Config.DisableESPInWater = true -- Default: True
+SWT_CM.Config.DisableESPInWater = true
 
 -- The minimum distance to see player informations
-SWT_CM.Config.ESPDistance = 500 -- Default: 500
+SWT_CM.Config.ESPDistance = 500
 
 -- Here you can enable/disable some information types, whether they should be shown or not.
 SWT_CM.Config.ESPInformations = {
@@ -112,6 +114,18 @@ end
 
 -- Whether a player's relations should be deleted on disconnect. (They are always deleted on serverrestarts and map changes)
 SWT_CM.Config.ResetRelationsOnDisconnect = true
+
+-- Here you can completely enable / disable the disguise mode. (Middle Mouse)
+SWT_CM.Config.EnableDisguiseMode = true -- Default: True
+
+-- Every category that wont be shown in the disguise menu.
+-- Please Note, you have to enter exact category names.
+SWT_CM.Config.HiddenCategories = {}
+
+-- Every job that wont be shown in the disguise menu.
+-- You can either enter exact job names or job commands here! NOT TEAM_...
+SWT_CM.Config.HiddenJobs = {}
+
 
 -- TODO
 -- The time in seconds it would need to scan a player.
