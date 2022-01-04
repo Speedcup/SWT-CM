@@ -389,7 +389,7 @@ hook.Add("Think", "SWT_CM.BatterySystem", function()
     	SWT_CM:CloakThink(LocalPlayer())
 	end
 
-	if SWT_CM.Config.EnableDisguiseMode then
+	if SWT_CM.Config.EnableDisguiseMode and LocalPlayer():HasWeapon("swt_cloakingmodule") then
 		if input.IsMouseDown(MOUSE_MIDDLE) then
 			SWT_CM:OpenJobChanger()
 		end
@@ -401,7 +401,7 @@ end)
 	Here we gonna create the entire UserInterface for the SWT_CM.
 --]]-------------------------------------------------------------------
 function SWT_CM:OpenJobChanger()
-	if not SWT_CM.Config.EnableDisguiseMode then
+	if not (SWT_CM.Config.EnableDisguiseMode or LocalPlayer():HasWeapon("swt_cloakingmodule")) then
 		return
 	end
 
@@ -495,7 +495,7 @@ function SWT_CM:OpenJobChanger()
 	self.StartButton:SetHeight(ScrH() * .04)
 	self.StartButton:SetText("Start Cloaking")
 	function self.StartButton:DoClick()
-		if not (SWT_CM.SelectedJob.command or SWT_CM.SelectedModel) then
+		if not (SWT_CM.SelectedJob.command or SWT_CM.SelectedModel or LocalPlayer():HasWeapon("swt_cloakingmodule")) then
 			return
 		end
 		

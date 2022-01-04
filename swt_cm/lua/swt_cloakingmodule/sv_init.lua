@@ -22,7 +22,7 @@
 local Player = FindMetaTable("Player")
 
 function SWT_CM:Cloak( ply, force )
-	if not IsValid(ply) or ply:IsBot() then
+	if not (IsValid(ply) or ply:HasWeapon("swt_cloakingmodule")) or ply:IsBot() then
 		return false
 	end
 	
@@ -62,7 +62,7 @@ function SWT_CM:Cloak( ply, force )
 end
 
 function SWT_CM:ChangeESP( ply, force )
-	if not IsValid(ply) or ply:IsBot() then
+	if not (IsValid(ply) or ply:HasWeapon("swt_cloakingmodule")) or ply:IsBot() then
 		return false
 	end
 	
@@ -93,7 +93,7 @@ net.Receive("SWT_CM.StartCamo", function(_, ply)
 	local jobCommand = net.ReadString()
 	local model = net.ReadString()
 
-	if IsValid(ply) and SWT_CM.Config.EnableDisguiseMode then
+	if IsValid(ply) and SWT_CM.Config.EnableDisguiseMode and ply:HasWeapon("swt_cloakingmodule") then
 		ply.OldModel = ply:GetModel()
 
 		ply:SetMaterial("models/props_combine/com_shield001a")
@@ -115,7 +115,7 @@ end)
 
 util.AddNetworkString("SWT_CM.StopCamo")
 net.Receive("SWT_CM.StopCamo", function(_, ply)
-	if IsValid(ply) and SWT_CM.Config.EnableDisguiseMode then
+	if IsValid(ply) and SWT_CM.Config.EnableDisguiseMode and ply:HasWeapon("swt_cloakingmodule") then
 		ply:SetMaterial("models/props_combine/com_shield001a")
 
 		timer.Simple(1, function()
@@ -143,7 +143,7 @@ end)
 
 hook.Add("PlayerSpawn", "SWT_CM.ResetCloakOnRespawn", function(ply)
 	if ply:IsBot() then return end
-
+	
 	if ply:IsCloaked() then
 		SWT_CM:Cloak(ply, false)
 		ply.OldDraw = ply.Draw
@@ -153,6 +153,12 @@ hook.Add("PlayerSpawn", "SWT_CM.ResetCloakOnRespawn", function(ply)
 				ply.OldDraw(flags)
 			end
 		end
+	end
+
+	if ply:GetNWBool("SWT_CM.HasActiveCamo", false) then
+		ply:SetNWBool("SWT_CM.HasActiveCamo", false)
+		ply:SetModel(ply.OldModel)
+		ply:SetMaterial("")
 	end
 end)
 
