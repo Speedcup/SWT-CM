@@ -1,18 +1,18 @@
 --[[
-	=================================================
-	███████╗██╗    ██╗████████╗    ██████╗███╗   ███╗
-	██╔════╝██║    ██║╚══██╔══╝   ██╔════╝████╗ ████║
-	███████╗██║ █╗ ██║   ██║█████╗██║     ██╔████╔██║
-	╚════██║██║███╗██║   ██║╚════╝██║     ██║╚██╔╝██║
-	███████║╚███╔███╔╝   ██║      ╚██████╗██║ ╚═╝ ██║
-	╚══════╝ ╚══╝╚══╝    ╚═╝       ╚═════╝╚═╝     ╚═╝
-	=================================================
-	-> Shadow-Trooper Cloaking Module
+    =================================================
+    ███████╗██╗    ██╗████████╗    ██████╗███╗   ███╗
+    ██╔════╝██║    ██║╚══██╔══╝   ██╔════╝████╗ ████║
+    ███████╗██║ █╗ ██║   ██║█████╗██║     ██╔████╔██║
+    ╚════██║██║███╗██║   ██║╚════╝██║     ██║╚██╔╝██║
+    ███████║╚███╔███╔╝   ██║      ╚██████╗██║ ╚═╝ ██║
+    ╚══════╝ ╚══╝╚══╝    ╚═╝       ╚═════╝╚═╝     ╚═╝
+    =================================================
+    -> Shadow-Trooper Cloaking Module
 
-	_______________________________
-	Created by
-		- Speedcup (https://steamcommunity.com/id/speedcup/ - 76561198261053079)
-		- Schmockwurst (https://steamcommunity.com/id/schmockwurst/ - 76561198197583550)
+    _______________________________
+    Created by
+        - Speedcup (https://steamcommunity.com/id/speedcup/ - 76561198261053079)
+        - Schmockwurst (https://steamcommunity.com/id/schmockwurst/ - 76561198197583550)
 ]]
 
 --[[-------------------------------------------------------------------
@@ -67,49 +67,49 @@ SWT_CM.Config.MinimumBattery = (SWT_CM.Config.MaxBattery / 10) -- Default: SWT_C
 
 -- Here you can edit relationType related stuff. (e.g. name, color)
 SWT_CM.Config.RelationTypes = {
-	-- Every unknown object. Could be an unscanned player, a random npc etc.
-	["unknown"] = {
-		["name"] = "Unknown",
-		["color"] = Color(255, 255, 255)
-	},
-	-- Every unpreffered known object. Everything that was scanned.
-	["known"] = {
-		["name"] = "Known",
-		["color"] = Color(0, 255, 0)
-	},
-	-- Everything thats an ally?
-	["ally"] = {
-		["name"] = "Ally",
-		["color"] = Color(0, 255, 0)
-	},
-	-- Everything thats an enemy?
-	["enemy"] = {
-		["name"] = "Enemy",
-		["color"] = Color(255, 0, 0)
-	},
+    -- Every unknown object. Could be an unscanned player, a random npc etc.
+    ["unknown"] = {
+        ["name"] = "Unknown",
+        ["color"] = Color(255, 255, 255)
+    },
+    -- Every unpreffered known object. Everything that was scanned.
+    ["known"] = {
+        ["name"] = "Known",
+        ["color"] = Color(0, 255, 0)
+    },
+    -- Everything thats an ally?
+    ["ally"] = {
+        ["name"] = "Ally",
+        ["color"] = Color(0, 255, 0)
+    },
+    -- Everything thats an enemy?
+    ["enemy"] = {
+        ["name"] = "Enemy",
+        ["color"] = Color(255, 0, 0)
+    },
 }
 
 SWT_CM.Config.RelationAlly = function(ent, localPlayer)
-	-- Just a simple check whether both players are from the same category.
-	-- Yes => Its an ally player.
-	-- False => Not an ally.
-	-- You can define your own ally checks here. Whether someone is an ally or not.
-	if DarkRP then
-		if ent:IsPlayer() and (ent:getJobTable().category == localPlayer:getJobTable().category) then
-			return true
-		end
-	end
+    -- Just a simple check whether both players are from the same category.
+    -- Yes => Its an ally player.
+    -- False => Not an ally.
+    -- You can define your own ally checks here. Whether someone is an ally or not.
+    if DarkRP then
+        if ent:IsPlayer() and (ent:getJobTable().category == localPlayer:getJobTable().category) then
+            return true
+        end
+    end
 
-	return false -- dont remove this line
+    return false -- dont remove this line
 end
 
 SWT_CM.Config.RelationEnemy = function(ent, localPlayer)
-	-- Just a simple check whether the given ent is from a specific entity class.
-	if ent:IsNPC() and (ent:GetClass() == "npc_combine_s") then
-		return true
-	end
-	
-	return false -- dont remove this line
+    -- Just a simple check whether the given ent is from a specific entity class.
+    if ent:IsNPC() and (ent:GetClass() == "npc_combine_s") then
+        return true
+    end
+
+    return false -- dont remove this line
 end
 
 -- Whether a player's relations should be deleted on disconnect. (They are always deleted on serverrestarts and map changes)

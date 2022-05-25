@@ -34,7 +34,7 @@ function SWT_CM:Print(text, type, chatPrint)
 	text = text or ""
 	type = type or "debug"
 	chatPrint = chatPrint or false
-	
+
 	INFO = Color(60, 220, 200)
 	ERROR = Color(255, 0, 0)
 	SUCCESS = Color(0, 255, 0)

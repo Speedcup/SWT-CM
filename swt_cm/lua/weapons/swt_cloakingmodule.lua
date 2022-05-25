@@ -75,29 +75,29 @@ end
 
 SWEP.SecondaryCooldown = 0
 function SWEP:SecondaryAttack()
-	if CLIENT then
-		if self.SecondaryCooldown < CurTime() then
-			local trace = LocalPlayer():GetEyeTrace()
-			local ent = trace.Entity
+	if SERVER then return end
 
-			-- IDEA
-			-- Im not sure, should we only allow relationship additions (basically scanning) while in ESP Mode? (Maybe ill create a poll in further future)
-			--[[
-				if not LocalPlayer():HasESPEnabled() then
-					SWT_CM:Print("You've to activate your ESP module, to be able to scan people!", "error", true)
-					return
-				end
-			]]
-			if IsValid(ent) and LocalPlayer():GetPos():Distance(ent:GetPos()) <= SWT_CM.Config.ESPDistance then
-				LocalPlayer():AddToRelations(ent)
-			elseif IsValid(ent) and LocalPlayer():GetPos():Distance(ent:GetPos()) >= SWT_CM.Config.ESPDistance then
-				SWT_CM:Print("The player / npc you are currently looking at is too far away from you!", "error", true)
-			else
-				SWT_CM:Print("You have to look at a player / npc in front of you!", "error", true)
+	if self.SecondaryCooldown < CurTime() then
+		local trace = LocalPlayer():GetEyeTrace()
+		local ent = trace.Entity
+
+		-- IDEA
+		-- Im not sure, should we only allow relationship additions (basically scanning) while in ESP Mode? (Maybe ill create a poll in further future)
+		--[[
+			if not LocalPlayer():HasESPEnabled() then
+				SWT_CM:Print("You've to activate your ESP module, to be able to scan people!", "error", true)
+				return
 			end
-
-			self.SecondaryCooldown = CurTime() + SWT_CM.Config.DefaultSWEPCooldown
+		]]
+		if IsValid(ent) and LocalPlayer():GetPos():Distance(ent:GetPos()) <= SWT_CM.Config.ESPDistance then
+			LocalPlayer():AddToRelations(ent)
+		elseif IsValid(ent) and LocalPlayer():GetPos():Distance(ent:GetPos()) >= SWT_CM.Config.ESPDistance then
+			SWT_CM:Print("The player / npc you are currently looking at is too far away from you!", "error", true)
+		else
+			SWT_CM:Print("You have to look at a player / npc in front of you!", "error", true)
 		end
+
+		self.SecondaryCooldown = CurTime() + SWT_CM.Config.DefaultSWEPCooldown
 	end
 end
 
