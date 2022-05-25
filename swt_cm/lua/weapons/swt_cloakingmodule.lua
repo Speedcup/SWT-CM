@@ -64,8 +64,6 @@ end
 SWEP.PrimaryCooldown = 0
 function SWEP:PrimaryAttack()
 	if self.PrimaryCooldown < CurTime() and SWT_CM:CanCloak(self:GetOwner()) then
-		local cloaked = self:GetOwner():IsCloaked()
-
 		if SERVER then
 			local ply = self:GetOwner()
 			SWT_CM:Cloak(ply)
