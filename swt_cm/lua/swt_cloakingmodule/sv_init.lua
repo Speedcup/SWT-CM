@@ -19,13 +19,11 @@
     SWT-CM - Server
 --]]-------------------------------------------------------------------
 
-local Player = FindMetaTable("Player")
-
 function SWT_CM:Cloak( ply, force )
-	if not (IsValid(ply) or ply:HasWeapon("swt_cloakingmodule")) or ply:IsBot() then
+	if not IsValid(ply) or (not ply:HasWeapon("swt_cloakingmodule") or ply:IsBot()) then
 		return false
 	end
-	
+
 	local isCloaked = ply:GetNWBool("SWT_CM.IsCloaked", false)
 
 	-- If force is available and not nil, overwrite isCloaked with the force value.
@@ -35,10 +33,8 @@ function SWT_CM:Cloak( ply, force )
 
 	if not isCloaked then
 		-- Skip cancloak when its forced.
-		if force == nil then
-			if not SWT_CM:CanCloak(ply) then
-				return
-			end
+		if force == nil and not SWT_CM:CanCloak(ply) then
+			return
 		end
 
 		ply.OldDraw = ply.Draw
@@ -62,10 +58,10 @@ function SWT_CM:Cloak( ply, force )
 end
 
 function SWT_CM:ChangeESP( ply, force )
-	if not (IsValid(ply) or ply:HasWeapon("swt_cloakingmodule")) or ply:IsBot() then
+	if not IsValid(ply) or (not ply:HasWeapon("swt_cloakingmodule") or ply:IsBot()) then
 		return false
 	end
-	
+
 	local hasESPEnabled = ply:HasESPEnabled()
 
 	-- If force is available and not nil, overwrite isCloaked with the force value.
@@ -74,10 +70,8 @@ function SWT_CM:ChangeESP( ply, force )
 	end
 
 	if not hasESPEnabled then
-		if force == nil then
-			if not SWT_CM:CanESP(ply) then
-				return
-			end
+		if force == nil and not SWT_CM:CanESP(ply) then
+			return
 		end
 
 		ply:SetNWBool("SWT_CM.HasESPEnabled", true)
@@ -90,7 +84,6 @@ end
 
 util.AddNetworkString("SWT_CM.StartCamo")
 net.Receive("SWT_CM.StartCamo", function(_, ply)
-	local jobCommand = net.ReadString()
 	local model = net.ReadString()
 
 	if IsValid(ply) and SWT_CM.Config.EnableDisguiseMode and ply:HasWeapon("swt_cloakingmodule") then
@@ -183,12 +176,8 @@ end)
 hook.Add("Think", "SWT_CM.DisableWhileInWater", function()
 	if SWT_CM.Config.DisableCloakInWater or SWT_CM.Config.DisableESPInWater then
 		for k, ply in pairs(player.GetHumans()) do
-			if ply:WaterLevel() == 1 then -- WaterLevel => https://wiki.facepunch.com/gmod/Entity:WaterLevel => 1 = Slightly submerged (at least to the feet) // should be enough? If too less, change it the way you want.
-				if ply:IsCloaked() then
-					SWT_CM:Cloak(ply, false)
-				end
-
-
+			if ply:WaterLevel() == 1 and ply:IsCloaked() then -- WaterLevel => https://wiki.facepunch.com/gmod/Entity:WaterLevel => 1 = Slightly submerged (at least to the feet) // should be enough? If too less, change it the way you want.
+				SWT_CM:Cloak(ply, false)
 			end
 		end
 	end

@@ -34,7 +34,7 @@ function SWT_CM:Print(text, type, chatPrint)
 	text = text or ""
 	type = type or "debug"
 	chatPrint = chatPrint or false
-	
+
 	INFO = Color(60, 220, 200)
 	ERROR = Color(255, 0, 0)
 	SUCCESS = Color(0, 255, 0)
@@ -114,16 +114,16 @@ function SWT_CM:Load(time)
 		include(folder .. "/" .. "sh_config.lua")
 		include(folder .. "/" .. "sh_init.lua")
 		include(folder .. "/" .. "cl_init.lua")
-		
+
 		if customConfig then
 			include(customConfig)
 		end
 	end
-	
-	SWT_CM:Print("Loaded! [" ..math.Round(SysTime() - time, 4) .. "s]")
+
+	SWT_CM:Print("Loaded! [" .. math.Round(SysTime() - time, 4) .. "s]")
 	hook.Run("SWT_CM.Loaded")
 end
 
 local start_time = SysTime()
-SWT_CM:Print("Loading... - [" ..math.Round(SysTime() - start_time, 4) .. "s]")
+SWT_CM:Print("Loading... - [" .. math.Round(SysTime() - start_time, 4) .. "s]")
 SWT_CM:Load(start_time)
