@@ -22,7 +22,7 @@
 SWT_CM = SWT_CM or {}
 
 -- Just for debugging purposes, a debugmode. Defaultly disabled for your convenience.
-SWT_CM.DebugMode = SWT_CM.DebugMode or true
+SWT_CM.DebugMode = SWT_CM.DebugMode or false
 
 --[[
 	Function: SWT_CM:Print(text: string, type: string) -> None
