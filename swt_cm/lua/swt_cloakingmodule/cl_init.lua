@@ -466,9 +466,11 @@ function SWT_CM:OpenJobChanger()
 
     function self:ReloadModels(data)
         self.ModelList:Clear()
+        
+        local models = istable(data.model) and data.model or {data.model}
 
         local selected = nil
-        for _, v in pairs(data.model) do
+        for _, v in pairs(models) do
             local ModelIcon = vgui.Create("SpawnIcon")
             ModelIcon:SetPos(64, 64)
             ModelIcon:SetModel(v)
